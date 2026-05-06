@@ -1,0 +1,15 @@
+{
+  "name": "local-power-editor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A local browser-based video editor with timeline, Edge TTS, preview, and MP4 export.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "edge-tts": "^1.0.1"
+  }
+}

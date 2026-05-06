@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Power Editor — 專業級網頁影片剪輯</title>
+    <meta name="description" content="基於 Web 的專業影片剪輯工具，具備高效預覽、動態時間軸與 Edge TTS 功能。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <div class="app">
+
+      <!-- ═══ 頂部工具列 ═══ -->
+      <header class="toolbar">
+        <div class="toolbar__brand">
+          <svg class="toolbar__logo" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          <span class="toolbar__title">Power Editor <small style="font-weight:400;opacity:.5;margin-left:4px">Pro</small></span>
+        </div>
+        <div class="toolbar__actions">
+          <label class="toolbar__toggle"><input id="fillPreview" type="checkbox"> <span>裁切填滿</span></label>
+          <button id="exportBtn" class="btn btn--accent">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            匯出 MP4
+          </button>
+        </div>
+      </header>
+
+      <!-- ═══ 左側面板 ═══ -->
+      <aside class="panel">
+        <div class="sidebar-tabs">
+          <div class="sidebar-tab active">媒體庫</div>
+          <div class="sidebar-tab">效果</div>
+          <div class="sidebar-tab">轉場</div>
+        </div>
+
+        <div class="panel-content">
+          <!-- 媒體庫區域 -->
+          <div class="section">
+            <div id="mediaLibrary">
+              <!-- 初始空狀態 -->
+              <label class="media-empty" id="dropZone">
+                <input id="fileInput" type="file" multiple accept="video/*,audio/*">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span><b>點擊或拖入素材</b>支援 MP4 / MP3 / WAV 等</span>
+              </label>
+              <!-- 資產網格 (動態渲染) -->
+              <div id="assets" class="assets-grid" style="display:none"></div>
+            </div>
+          </div>
+
+          <div class="panel__option">
+            <label><input id="splitAudio" type="checkbox" checked> 分離影片原音到聲音軌</label>
+          </div>
+
+          <!-- TTS -->
+          <div class="section">
+            <div class="section-title">文字轉語音 (TTS)</div>
+            <div class="tts-box">
+              <textarea id="ttsText" rows="3" placeholder="輸入旁白文字…"></textarea>
+              <select id="voice">
+                <option value="zh-TW-HsiaoChenNeural">中文台灣女聲 HsiaoChen</option>
+                <option value="zh-TW-YunJheNeural">中文台灣男聲 YunJhe</option>
+                <option value="zh-CN-XiaoxiaoNeural">中文普通話女聲 Xiaoxiao</option>
+                <option value="en-US-AriaNeural">英文女聲 Aria</option>
+                <option value="ja-JP-NanamiNeural">日文女聲 Nanami</option>
+              </select>
+              <button id="makeTts" class="btn btn--outline btn--sm">生成語音素材</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ═══ 主工作區 ═══ -->
+      <main class="workspace">
+        <!-- 預覽區域 -->
+        <section class="preview-section">
+          <div class="preview-stage">
+            <div class="monitor-frame" id="monitorFrame">
+              <canvas id="previewCanvas"></canvas>
+              <video id="previewVideo" playsinline preload="metadata" style="display:none"></video>
+              <div id="emptyPreview" class="preview-empty">
+                <svg viewBox="0 0 24 24" width="60" height="60" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="opacity:.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span style="opacity:.4">拖曳片段到時間軸進行預覽</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 傳輸控制 -->
+          <div class="transport-bar">
+            <button id="playBtn" class="btn btn--icon" title="播放/暫停">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            </button>
+            <button id="stopBtn" class="btn btn--icon" title="停止">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+            </button>
+            <input id="scrub" type="range" min="0" max="60" step="0.01" value="0">
+            <div class="time-display">
+              <input id="timeInput" type="number" step="0.01" value="0" title="點擊輸入精確秒數">
+              <span id="timeTotal">/ 00:00</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 屬性編輯器 (浮動) -->
+        <div class="inspector-panel" id="inspector">
+          <div id="selectedName" class="inspector-title">未選取片段</div>
+          <div class="inspector-group">
+            <label class="field">開始 <input id="clipStart" type="number" min="0" step="0.1" disabled></label>
+            <label class="field">長度 <input id="clipDuration" type="number" min="0.1" step="0.1" disabled></label>
+            <label class="field">倍速 <input id="clipSpeed" type="number" min="0.1" max="10" step="0.1" disabled></label>
+            <label class="field">音量 <input id="clipVolume" type="number" min="0" max="2" step="0.1" disabled></label>
+            <label id="clipUseAudioLabel" class="field" style="display:none"><input id="clipUseAudio" type="checkbox" disabled> 保留原音</label>
+            <label class="field"><input id="stretchMode" type="checkbox"> 伸縮模式</label>
+          </div>
+          <div style="flex:1"></div>
+          <div class="inspector-actions">
+            <button id="splitBtn" class="btn btn--outline btn--sm" disabled title="快捷鍵: S">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16"/><path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/></svg>
+              分割
+            </button>
+            <button id="deleteClip" class="btn btn--danger btn--sm" disabled title="快捷鍵: Delete">刪除</button>
+          </div>
+        </div>
+
+        <!-- 時間軸 -->
+        <section class="timeline-container">
+          <div class="timeline-toolbar">
+            <span style="font-weight:700;font-size:12px;margin-right:20px">時間軸</span>
+            <small style="opacity:.5">拖曳移動，拖右側調整長度。</small>
+          </div>
+          <div class="timeline-viewport">
+            <div class="timeline-ruler" id="ruler"></div>
+            <div class="timeline-tracks">
+              <div class="playhead-container">
+                <div class="playhead-line" id="playhead"><div class="playhead-head"></div></div>
+              </div>
+              
+              <!-- 影片軌 -->
+              <div class="track-row">
+                <div class="track-header">
+                  <span class="track-name">影片 1</span>
+                  <svg class="track-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+                </div>
+                <div class="track-lane" id="videoTrack"><div class="snap-line" id="videoGuide" style="display:none"></div></div>
+              </div>
+
+              <!-- 聲音軌 -->
+              <div class="track-row">
+                <div class="track-header">
+                  <span class="track-name">聲音 1</span>
+                  <svg class="track-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                </div>
+                <div class="track-lane" id="audioTrack"><div class="snap-line" id="audioGuide" style="display:none"></div></div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div id="status" class="app-status">就緒</div>
+    </div>
+    <script src="/app.js"></script>
+  </body>
+</html>

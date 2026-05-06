@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Local Media (keep the directory but ignore content)
+media/*
+!media/.gitkeep
+
+# Exports
+exports/*
+!exports/.gitkeep
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Misc
+.env
+*.log
