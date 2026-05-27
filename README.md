@@ -40,7 +40,7 @@ A professional browser-based video editing tool with a high-performance timeline
 ### Setup | 開始使用
 1. Clone the repository | 複製專案
    ```bash
-   git clone https://github.com/your-username/local-power-editor.git
+   git clone [https://github.com/your-username/local-power-editor.git](https://github.com/NONAME0924/Power-Editor.git)
    cd local-power-editor
    ```
 2. Install dependencies | 安裝套件
